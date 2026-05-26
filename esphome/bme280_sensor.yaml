@@ -1,0 +1,81 @@
+esphome:
+  name: sisters-bme280
+  friendly_name: "Sister's Weather Sensor"
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging to serial (disable for production)
+logger:
+
+# Enable the ESPHome native API (required for Home Assistant)
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+# Enable OTA (over-the-air) updates so you can reflash remotely
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Fallback AP if Wi-Fi fails — connect to this to reconfigure
+  ap:
+    ssid: "BME280 Fallback AP"
+    password: !secret fallback_ap_password
+
+captive_portal:
+
+# MQTT for Adafruit IO — uncomment once you have your Adafruit account set up
+# mqtt:
+#   broker: io.adafruit.com
+#   port: 1883
+#   username: !secret adafruit_username
+#   password: !secret adafruit_key
+
+# I2C bus — matches your existing wiring (SDA=21, SCL=22)
+i2c:
+  sda: 21
+  scl: 22
+  scan: true
+
+sensor:
+  - platform: bme280_i2c
+    temperature:
+      name: "Temperature"
+      unit_of_measurement: "°C"
+      accuracy_decimals: 1
+    humidity:
+      name: "Humidity"
+      unit_of_measurement: "%"
+      accuracy_decimals: 1
+    pressure:
+      name: "Pressure"
+      id: pressure_sensor
+      unit_of_measurement: "hPa"
+      accuracy_decimals: 1
+    address: 0x76   # change to 0x77 if 0x76 doesn't work
+    update_interval: 30s
+
+  # Derived altitude from pressure
+  - platform: template
+    name: "Altitude"
+    unit_of_measurement: "m"
+    accuracy_decimals: 1
+    lambda: |-
+      return 44330.0 * (1.0 - pow(id(pressure_sensor).state / 1013.25, 1.0/5.255));
+    update_interval: 30s
+
+  # Wi-Fi signal strength — useful for remote diagnostics
+  - platform: wifi_signal
+    name: "Wi-Fi Signal"
+    update_interval: 60s
+
+binary_sensor:
+  - platform: status
+    name: "Device Status"

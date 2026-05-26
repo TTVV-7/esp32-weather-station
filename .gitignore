@@ -1,0 +1,12 @@
+# Keep your credentials out of version control
+src/secrets.h
+esphome/secrets.yaml
+
+# ESPHome build cache (inlines secrets into generated source)
+esphome/.esphome/
+
+# PlatformIO build output
+.pio/
+
+# macOS
+.DS_Store
